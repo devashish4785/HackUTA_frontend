@@ -2,6 +2,25 @@ import React, { useState } from 'react';
 import './App.css';  // Updated CSS
 import therapistImage from './therapist.png';  // Replace with your therapist image
 
+// Convert hex color to RGBA with specified opacity
+function hexToRGBA(hex, opacity) {
+  let r = 0, g = 0, b = 0;
+
+  // Convert 3-digit hex to 6-digit hex
+  if (hex.length === 4) {
+    r = parseInt(hex[1] + hex[1], 16);
+    g = parseInt(hex[2] + hex[2], 16);
+    b = parseInt(hex[3] + hex[3], 16);
+  } else if (hex.length === 7) {
+    r = parseInt(hex[1] + hex[2], 16);
+    g = parseInt(hex[3] + hex[4], 16);
+    b = parseInt(hex[5] + hex[6], 16);
+  }
+  
+
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
+
 function App() {
   const [userMessage, setUserMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
@@ -12,8 +31,8 @@ function App() {
     if (!userMessage.trim()) return;
 
     // Add user message to chat history
-    setChatHistory((prevChatHistory) => [
-      ...prevChatHistory,
+    setChatHistory([
+      ...chatHistory,
       { sender: 'user', text: userMessage },
     ]);
     setUserMessage('');
@@ -28,9 +47,10 @@ function App() {
       const data = await response.json();
 
       if (response.ok) {
-        // Change background color if provided
+        // Change background color if provided in response
         if (data.background_color) {
-          document.body.style.backgroundColor = data.background_color;
+          const rgbaColor = hexToRGBA(data.background_color, 0.8); // 0.8 opacity
+          document.body.style.backgroundColor = rgbaColor;
         }
 
         setChatHistory((prevChatHistory) => [
