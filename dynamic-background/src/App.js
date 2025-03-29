@@ -2,51 +2,67 @@ import React, { useState } from 'react';
 import './App.css';
 
 function App() {
-  const [question, setQuestion] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [userMessage, setUserMessage] = useState('');
+  const [chatHistory, setChatHistory] = useState([]);
 
-  // Function to handle input change
-  const handleInputChange = (event) => {
-    setQuestion(event.target.value);
+  // Handle user input change
+  const handleChange = (e) => {
+    setUserMessage(e.target.value);
   };
 
-  // Function to handle the submit and fetch image from backend
-  const getImage = async () => {
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Send message to Flask backend
     try {
-      const response = await fetch('http://localhost:3001/generate-image', {  // Adjust the URL if necessary
+      const response = await fetch('http://localhost:5000/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ question }),  // Send the input question to backend
+        body: JSON.stringify({ message: userMessage }),
       });
 
       const data = await response.json();
-      setImageUrl(data.image_url);  // Update the imageUrl state with the URL returned from the backend
+
+      if (response.ok) {
+        // Update chat history with the user message and bot response
+        setChatHistory([
+          ...chatHistory,
+          { sender: 'user', text: userMessage },
+          { sender: 'bot', text: data.response },
+        ]);
+        setUserMessage(''); // Clear the input field
+      } else {
+        console.error('Error:', data.error);
+      }
     } catch (error) {
       console.error('Error:', error);
     }
   };
 
   return (
-    <div
-      className="App"
-      style={{
-        backgroundImage: `url(${imageUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        height: '100vh',
-        transition: 'background-image 1s ease-in-out',
-      }}
-    >
-      <div className="input-container">
-        <input
-          type="text"
-          value={question}
-          onChange={handleInputChange}
-          placeholder="Enter your question"
-        />
-        <button onClick={getImage}>Submit</button>
+    <div className="App">
+      <div className="chat-container">
+        <div className="chat-history">
+          {chatHistory.map((message, index) => (
+            <div key={index} className={`message ${message.sender}`}>
+              <strong>{message.sender === 'user' ? 'You' : 'Bot'}:</strong>
+              <p>{message.text}</p>
+            </div>
+          ))}
+        </div>
+        <form onSubmit={handleSubmit} className="chat-form">
+          <input
+            type="text"
+            value={userMessage}
+            onChange={handleChange}
+            placeholder="Type your message"
+            required
+          />
+          <button type="submit">Send</button>
+        </form>
       </div>
     </div>
   );
