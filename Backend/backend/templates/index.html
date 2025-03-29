@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Gemini API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #chat-container {
+            width: 50%;
+            max-width: 600px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #chat-box {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        #chat-box p {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+        }
+
+        #user-input {
+            width: calc(100% - 100px);
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <h2>Chat with Gemini</h2>
+        <div id="chat-box">
+            <!-- Chat messages will appear here -->
+        </div>
+        <div>
+            <input type="text" id="user-input" placeholder="Say something..." />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to send a message to the backend and receive a response
+        async function sendMessage() {
+            const userInput = document.getElementById("user-input").value;
+            
+            // Clear input field after sending
+            document.getElementById("user-input").value = "";
+
+            // Display user message in the chat box
+            displayMessage(userInput, 'user');
+
+            // Send user input to Flask backend
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: userInput })
+            });
+
+            // Get the response from the backend
+            const data = await response.json();
+            const geminiResponse = data.response || "Sorry, there was an issue.";
+
+            // Display Gemini response in the chat box
+            displayMessage(geminiResponse, 'gemini');
+        }
+
+        // Function to display messages in the chat box
+        function displayMessage(message, sender) {
+            const chatBox = document.getElementById("chat-box");
+            const messageElement = document.createElement("p");
+            messageElement.textContent = message;
+
+            if (sender === 'user') {
+                messageElement.style.backgroundColor = '#d1f7c4';  // Light green for user
+            } else {
+                messageElement.style.backgroundColor = '#e0e0e0';  // Light gray for Gemini
+            }
+
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;  // Scroll to the bottom
+        }
+    </script>
+</body>
+</html>
