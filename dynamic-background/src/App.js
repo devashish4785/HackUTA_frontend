@@ -1,84 +1,76 @@
 import React, { useState } from 'react';
-import './App.css'; // Optional, you can add your own styling
+import './App.css';  // Updated CSS
+import therapistImage from './therapist.png';  // Replace with your therapist image
 
 function App() {
-  // State to store user message and chat history
   const [userMessage, setUserMessage] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if the user input is empty
-    if (!userMessage.trim()) {
-      return;
-    }
+    if (!userMessage.trim()) return;
 
-    // Add the user message to the chat history
-    setChatHistory([
-      ...chatHistory,
+    // Add user message to chat history
+    setChatHistory((prevChatHistory) => [
+      ...prevChatHistory,
       { sender: 'user', text: userMessage },
     ]);
     setUserMessage('');
 
     try {
-      // Send the user message to the Flask backend
       const response = await fetch('https://hackuta-backend.onrender.com/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: userMessage }), // Send message as JSON
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userMessage }),
       });
 
-      const data = await response.json(); // Parse the JSON response
-
-      // Log the backend response to the console
-      console.log('Response from Backend:', data);
+      const data = await response.json();
 
       if (response.ok) {
-        // Add the bot's response to the chat history
+        // Change background color if provided
+        if (data.background_color) {
+          document.body.style.backgroundColor = data.background_color;
+        }
+
         setChatHistory((prevChatHistory) => [
           ...prevChatHistory,
-          { sender: 'bot', text: data.response }, // Display bot's response
+          { sender: 'bot', text: data.response },
         ]);
       } else {
         setChatHistory((prevChatHistory) => [
           ...prevChatHistory,
-          { sender: 'bot', text: "Sorry, something went wrong! Please try again." },
+          { sender: 'bot', text: "I'm here for you. Something went wrong. Let's try again." },
         ]);
-        console.error('Error:', data.error); // Log any errors from the backend
       }
     } catch (error) {
-      console.error('Error:', error); // Log any fetch errors
+      console.error('Error:', error);
+      setChatHistory((prevChatHistory) => [
+        ...prevChatHistory,
+        { sender: 'bot', text: "I'm here for you. Something went wrong. Let's try again." },
+      ]);
     }
-    
   };
 
   return (
     <div className="App">
-      <h1>Chat with the Bot</h1>
+      <img src={therapistImage} alt="Therapist" className="human-image" />
+      <h1>Chat with Susan, Your Virtual Therapist</h1>
 
-      {/* Display the chat history */}
       <div className="chat-container">
-        {chatHistory.map((message, index) => (
-          <div
-            key={index}
-            className={`message ${message.sender}`}
-          >
+        {chatHistory.slice(-3).map((message, index) => (
+          <div key={index} className={`message ${message.sender}`}>
             <span>{message.text}</span>
           </div>
         ))}
       </div>
 
-      {/* User input form */}
       <form onSubmit={handleSubmit} className="input-form">
         <input
           type="text"
           value={userMessage}
           onChange={(e) => setUserMessage(e.target.value)}
-          placeholder="Type a message..."
+          placeholder="Talk to me, I'm listening..."
           className="input-field"
         />
         <button type="submit" className="send-button">Send</button>
